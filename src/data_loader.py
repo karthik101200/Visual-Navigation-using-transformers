@@ -17,7 +17,9 @@ class ReconDataset(Dataset):
                  waypoint_stride = 1,
                  image_size = (128, 128),
                  goal_min_offset = 5,
-                 goal_max_offset = 30):
+                 goal_max_offset = 30,
+                 split = None,
+                 train_val_ratio = 0.8):
 
         self.hdf5_file_path = hdf5_file_path
         self.context_length = context_length
@@ -26,8 +28,19 @@ class ReconDataset(Dataset):
         self.goal_min_offset = goal_min_offset
         self.goal_max_offset = goal_max_offset
         self.prediction_length = prediction_length
+        self.split = split
+        self.train_val_ratio = train_val_ratio
 
-        self.files = self._load_hdf5_files()
+        all_files = self._load_hdf5_files()
+        
+        # Split files into train and val
+        split_idx = int(len(all_files) * train_val_ratio)
+        if split == 'train':
+            self.files = all_files[:split_idx]
+        elif split == 'val':
+            self.files = all_files[split_idx:]
+        else:  # None, use all files
+            self.files = all_files
 
         self.samples = []
         for idx, file in enumerate(self.files):
@@ -38,7 +51,7 @@ class ReconDataset(Dataset):
                     n = len(f['images']['rgb_left'])
                     for t in range(n):
                         # Check if there are enough previous observations for context
-                        if t >= self.context_length - 1 and t + self.prediction_length*self.waypoint_stride < n and t + self.goal_min_offset < n and t + self.goal_max_offset < n:
+                        if t >= self.context_length - 1 and t + self.prediction_length*self.waypoint_stride < n and t + self.goal_min_offset < n:
                             self.samples.append((idx, t))
             except Exception as e:
                 print(f"Error reading {file_path}: {e}")
@@ -110,7 +123,7 @@ class ReconDataset(Dataset):
                 # Read poistion data from the hdf5 file
                 pred_position = f['jackal']['position'][pred_index,:2]
 
-                # Convert position and yaw into relative coordinates with respect to the goal
+                # Convert position and yaw into relative coordinates with respect to the goal                
                 relative_position = pred_position - current_position 
                 rotation_matrix = np.array([[np.cos(current_yaw), np.sin(current_yaw)],
                                             [-np.sin(current_yaw), np.cos(current_yaw)]])

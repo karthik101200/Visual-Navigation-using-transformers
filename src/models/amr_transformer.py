@@ -73,27 +73,27 @@ class amrTransformer(nn.Module):
         output = self.output_linear(decoder_output)
         return output
 
-model = amrTransformer(embed_dim=128, num_waypoints=5)
+# model = amrTransformer(embed_dim=128, num_waypoints=5)
 
-observations = torch.randn(2, 4, 3, 64, 64)  # B, N, C, H, W
-goal = torch.randn(2, 1, 3, 64, 64)  # B, N, C, H, W
+# observations = torch.randn(2, 4, 3, 64, 64)  # B, N, C, H, W
+# goal = torch.randn(2, 1, 3, 64, 64)  # B, N, C, H, W
 
-waypoints = model(observations, goal)
+# waypoints = model(observations, goal)
 
-assert waypoints.shape == (2, 5, 2)
+# assert waypoints.shape == (2, 5, 2)
 
-loss = waypoints.square().mean()
-loss.backward()
+# loss = waypoints.square().mean()
+# loss.backward()
 
-print("Output shape:", waypoints.shape)
-print("Action query gradient:", model.action_query_embeddings.weight.grad is not None)
+# print("Output shape:", waypoints.shape)
+# print("Action query gradient:", model.action_query_embeddings.weight.grad is not None)
 
-for name, param in model.named_parameters():
-    if param.grad is None:
-        print("Missing gradient:", name)
+# for name, param in model.named_parameters():
+#     if param.grad is None:
+#         print("Missing gradient:", name)
 
-assert torch.isfinite(waypoints).all()
+# assert torch.isfinite(waypoints).all()
 
-for name, param in model.named_parameters():
-    if param.grad is not None:
-        assert torch.isfinite(param.grad).all(), name
+# for name, param in model.named_parameters():
+#     if param.grad is not None:
+#         assert torch.isfinite(param.grad).all(), name
