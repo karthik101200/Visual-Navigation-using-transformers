@@ -1,73 +1,99 @@
-import torch
-import torch.nn as nn
+# import torch
+# import torch.nn as nn
 
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'models'))
-from amr_transformer import amrTransformer
-torch.manual_seed(42)
+# import sys
+# import os
+# sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'models'))
+# from amr_transformer import amrTransformer
+# torch.manual_seed(42)
 
-B = 16
-D = 128
-K = 5
+# B = 16
+# D = 128
+# K = 5
 
-# Four placeholder observation embeddings
-observations = torch.zeros(B, 4, D)
+# # Four placeholder observation embeddings
+# observations = torch.zeros(B, 4, D)
 
-# Random goals in robot-relative coordinates
-goal_xy = torch.empty(B, 2).uniform_(-2.0, 2.0)
-goal_xy[:, 0] += 3.0  # Keep goals generally ahead of robot
+# # Add test observations to the first two feature dimensions
+# velocity = 3.0
+# positions = positions = torch.stack([
+#     -3 * velocity,
+#     -2 * velocity,
+#     -1 * velocity,
+#      0 * velocity
+# ])  
 
-# Encode goal coordinates in the first two feature dimensions
-goals = torch.zeros(B, 1, D)
-goals[:, 0, :2] = goal_xy
+# # Random goals in robot-relative coordinates
+# goal_xy = torch.empty(B, 2).uniform_(-2.0, 2.0)
+# goal_xy[:, 0] += 3.0  # Keep goals generally ahead of robot
 
-# Five evenly spaced future waypoints
-fractions = torch.linspace(1 / K, 1.0, K)
+# # Encode goal coordinates in the first two feature dimensions
+# goals = torch.zeros(B, 1, D)
+# goals[:, 0, :2] = goal_xy
 
-targets = fractions[None, :, None] * goal_xy[:, None, :]
+# # Five evenly spaced future waypoints
+# fractions = torch.linspace(1 / K, 1.0, K)
 
-print("Observations:", observations.shape)
-print("Goals:", goals.shape)
-print("Targets:", targets.shape)
-print("First goal:", goal_xy[0])
-print("First trajectory:", targets[0])
+# targets = fractions[None, :, None] * goal_xy[:, None, :]
 
-model = amrTransformer(embed_dim=128, num_waypoints=5)
+# print("Observations:", observations.shape)
+# print("Goals:", goals.shape)
+# print("Targets:", targets.shape)
+# print("First goal:", goal_xy[0])
+# print("First trajectory:", targets[0])
 
-# Disable dropout for this deterministic overfitting test
-model.eval()
+# model = amrTransformer(embed_dim=128, num_waypoints=5)
 
-criterion = nn.MSELoss()
-optimizer = torch.optim.AdamW(
-    model.parameters(),
-    lr=1e-4,
-    weight_decay=0.0
-)
+# # Disable dropout for this deterministic overfitting test
+# model.eval()
 
-for step in range(501):
+# criterion = nn.MSELoss()
+# optimizer = torch.optim.AdamW(
+#     model.parameters(),
+#     lr=1e-4,
+#     weight_decay=0.0
+# )
 
-    # TODO 1: Reset gradients
-    optimizer.zero_grad()
+# for step in range(501):
 
-    # TODO 2: Forward pass
-    predictions = model(observations, goals)
+#     # TODO 1: Reset gradients
+#     optimizer.zero_grad()
 
-    # TODO 3: Compute MSE between predictions and targets
-    loss = criterion(predictions, targets)
+#     # TODO 2: Forward pass
+#     predictions = model(observations, goals)
 
-    # TODO 4: Backpropagate and update parameters
-    loss.backward()
-    optimizer.step()
+#     # TODO 3: Compute MSE between predictions and targets
+#     loss = criterion(predictions, targets)
 
-    if step % 50 == 0:
-        print(f"Step {step:3d} | Loss: {loss.item():.6f}")
+#     # TODO 4: Backpropagate and update parameters
+#     loss.backward()
+#     optimizer.step()
 
-with torch.no_grad():
-    predictions = model(observations, goals)
+#     if step % 50 == 0:
+#         print(f"Step {step:3d} | Loss: {loss.item():.6f}")
 
-print("Goal A:", goal_xy[0])
-print("Predicted A:\n", predictions[0])
+# with torch.no_grad():
+#     predictions = model(observations, goals)
 
-print("Goal B:", goal_xy[1])
-print("Predicted B:\n", predictions[1])
+# print("Goal A:", goal_xy[0])
+# print("Predicted A:\n", predictions[0])
+
+# print("Goal B:", goal_xy[1])
+# print("Predicted B:\n", predictions[1])
+
+import h5py
+
+path = "data/recon_dataset/recon_release/jackal_2019-08-02-16-23-30_0_r00.hdf5"
+
+with h5py.File(path, "r") as f:
+
+    def print_structure(name, obj):
+        if isinstance(obj, h5py.Dataset):
+            print(
+                f"DATASET: {name:50s} "
+                f"shape={obj.shape} dtype={obj.dtype}"
+            )
+        else:
+            print(f"GROUP:   {name}")
+
+    f.visititems(print_structure)
