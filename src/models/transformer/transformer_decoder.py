@@ -1,11 +1,6 @@
 import torch
 import torch.nn as nn
-
-# append src to sys.path to import MultiHeadAttention
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'models', 'transformer'))
-from transformer.multihead_attention import MultiHeadAttention
+from .multihead_attention import MultiHeadAttention
 
 class FeedForwardNetwork(nn.Module):
     def __init__(self,input_dim,hidden_dim,dropout):

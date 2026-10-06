@@ -19,7 +19,7 @@ class ReconDataset(Dataset):
                  goal_min_offset = 5,
                  goal_max_offset = 30,
                  split = None,
-                 train_val_ratio = 0.8):
+                 train_val_ratio = 0.8,device = 'cuda'):
 
         self.hdf5_file_path = hdf5_file_path
         self.context_length = context_length
@@ -30,6 +30,7 @@ class ReconDataset(Dataset):
         self.prediction_length = prediction_length
         self.split = split
         self.train_val_ratio = train_val_ratio
+        self.device = device if    torch.cuda.is_available() and device == 'cuda' else 'cpu'
 
         all_files = self._load_hdf5_files()
         
@@ -135,9 +136,9 @@ class ReconDataset(Dataset):
 
             # return tensors for observations, goals, waypoints, current index and goal_index
             return {
-                'observations': torch.tensor(observation_images, dtype=torch.float32),
-                'goals': torch.tensor(goal_images, dtype=torch.float32),
-                'waypoints': torch.tensor(waypoints, dtype=torch.float32),
+                'observations': torch.tensor(observation_images, dtype=torch.float32).to(self.device),
+                'goals': torch.tensor(goal_images, dtype=torch.float32).to(self.device),
+                'waypoints': torch.tensor(waypoints, dtype=torch.float32).to(self.device),
                 'current_index': t,
                 'goal_index': goal_index
             }

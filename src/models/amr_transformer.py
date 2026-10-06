@@ -1,13 +1,9 @@
 import torch
 import torch.nn as nn
-# append src to sys.path to import MultiHeadAttention
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'models', 'transformer'))
-from transformer.transformer_encoder import TransformerEncoder
-from transformer.transformer_decoder import TransformerDecoder
-from transformer.positional_encoding import PositionalEncoding
-from cnn_encoder import ImageEncoder
+from .transformer.transformer_encoder import TransformerEncoder
+from .transformer.transformer_decoder import TransformerDecoder
+from .transformer.positional_encoding import PositionalEncoding
+from .cnn_encoder import ImageEncoder
 
 class amrTransformer(nn.Module):
     def __init__(self, embed_dim = 128, num_waypoints=5):
