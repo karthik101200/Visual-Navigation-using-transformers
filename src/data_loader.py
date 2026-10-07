@@ -19,7 +19,9 @@ class ReconDataset(Dataset):
                  goal_min_offset = 5,
                  goal_max_offset = 30,
                  split = None,
-                 train_val_ratio = 0.8,device = 'cuda'):
+                 train_val_ratio = 0.8,
+                 device = 'cuda',
+                 max_files = None):
 
         self.hdf5_file_path = hdf5_file_path
         self.context_length = context_length
@@ -30,9 +32,13 @@ class ReconDataset(Dataset):
         self.prediction_length = prediction_length
         self.split = split
         self.train_val_ratio = train_val_ratio
-        self.device = device if    torch.cuda.is_available() and device == 'cuda' else 'cpu'
+        self.device = device if torch.cuda.is_available() and device == 'cuda' else 'cpu'
 
         all_files = self._load_hdf5_files()
+        
+        # Limit to max_files if specified
+        if max_files is not None:
+            all_files = all_files[:max_files]
         
         # Split files into train and val
         split_idx = int(len(all_files) * train_val_ratio)

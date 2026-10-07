@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 import argparse
+from tqdm import tqdm
 from data_loader import ReconDataset
 from models.amr_transformer import amrTransformer
 
@@ -16,6 +17,7 @@ def train(args):
     recon_data_root = args.recon_data_root
     output_save_path = args.output_save_path
     device = args.device if torch.cuda.is_available() and args.device == 'cuda' else 'cpu'
+    max_files = args.max_files
 
     train_dataset = ReconDataset(
         hdf5_file_path=recon_data_root,
@@ -27,7 +29,8 @@ def train(args):
         goal_max_offset=30,
         split='train',
         train_val_ratio=0.8,
-        device=device
+        device=device,
+        max_files=max_files
     )
 
     val_dataset = ReconDataset(
@@ -40,7 +43,8 @@ def train(args):
         goal_max_offset=30,
         split='val',
         train_val_ratio=0.8,
-        device=device
+        device=device,
+        max_files=max_files
     )
 
     print(f"Number of training samples: {len(train_dataset)}")
@@ -67,7 +71,7 @@ def train(args):
     for epoch in range(epochs):
         total_loss = 0.0
         model.train()
-        for batch in train_loader:
+        for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs} [Train]"):
             observations = batch['observations'].to(device)
             goals = batch['goals'].to(device)
             waypoints = batch['waypoints'].to(device)
@@ -87,7 +91,7 @@ def train(args):
         model.eval()
         val_loss = 0.0
         with torch.no_grad():
-            for batch in val_loader:
+            for batch in tqdm(val_loader, desc=f"Epoch {epoch+1}/{epochs} [Val]"):
                 observations = batch['observations'].to(device)
                 goals = batch['goals'].to(device)
                 waypoints = batch['waypoints'].to(device)
@@ -120,6 +124,7 @@ if __name__ == "__main__":
     parser.add_argument('--dropout_rate', type=float, default=0.1, help='Dropout rate for the MLP head')
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='Weight decay for the optimizer')
     parser.add_argument('--output_save_path', type=str, default='/home/gkmunda/study/multimodal_project/src/models/checkpoints', help='Path to save the trained model and features')
+    parser.add_argument('--max_files', type=int, default=None, help='Max number of HDF5 files to use (for quick testing)')
 
     parser.add_argument('--dino_model_name', type=str, default='dinov2_vits14', help='DINOv2 model name')
     args = parser.parse_args()
