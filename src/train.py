@@ -62,6 +62,11 @@ def train(args):
     )
 
     criterion = torch.nn.MSELoss()
+    
+    # Learning rate scheduler to reduce LR when val loss plateaus
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=3, verbose=True
+    )
 
     best_val_loss = float('inf')
     os.makedirs(output_save_path, exist_ok=True)
@@ -87,6 +92,10 @@ def train(args):
         avg_loss = total_loss / len(train_loader)
         print(f"Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}")
 
+        # Add into text file in output_save_path
+        with open(os.path.join(output_save_path, 'training_log.txt'), 'a') as f:
+            f.write(f"Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}\n")
+
         # Validation
         model.eval()
         val_loss = 0.0
@@ -101,6 +110,13 @@ def train(args):
                 val_loss += loss.item()
             avg_val_loss = val_loss / len(val_loader)
             print(f"Epoch [{epoch+1}/{epochs}], Validation Loss: {avg_val_loss:.4f}")
+            
+            # Step the scheduler
+            scheduler.step(avg_val_loss)
+            current_lr = optimizer.param_groups[0]['lr']
+            print(f"  Current LR: {current_lr:.6f}")
+            with open(os.path.join(output_save_path, 'training_log.txt'), 'a') as f:
+                f.write(f"Epoch [{epoch+1}/{epochs}], Validation Loss: {avg_val_loss:.4f}\n")
 
             if avg_val_loss < best_val_loss:
                 best_val_loss = avg_val_loss
@@ -123,7 +139,7 @@ if __name__ == "__main__":
     parser.add_argument('--learning_rate', type=float, default=0.001, help='Learning rate for the optimizer')
     parser.add_argument('--dropout_rate', type=float, default=0.1, help='Dropout rate for the MLP head')
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='Weight decay for the optimizer')
-    parser.add_argument('--output_save_path', type=str, default='/home/gkmunda/study/multimodal_project/src/models/checkpoints', help='Path to save the trained model and features')
+    parser.add_argument('--output_save_path', type=str, default='/home/gkmunda/study/vint/src/models/checkpoints', help='Path to save the trained model and features')
     parser.add_argument('--max_files', type=int, default=None, help='Max number of HDF5 files to use (for quick testing)')
 
     parser.add_argument('--dino_model_name', type=str, default='dinov2_vits14', help='DINOv2 model name')
