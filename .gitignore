@@ -1,2 +1,6 @@
 # add data
 /data
+src/models/checkpoints
+src/__pycache__
+src/models/__pycache__
+src/models/transformers/__pycache__
